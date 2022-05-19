@@ -12,5 +12,21 @@
 - Check the project structure
 `tree -L 2`
 
-- Implement a basic NFT
+- Implement a basic NFT contract
+`mv -v src/Contract.sol src/NFT.sol`
+
+- Compile and deploy with forge
+`forge build`
+
+Set your environment variables
+```
+export RPC_URL=<Your RPC endpoint>
+export PRIVATE_KEY=<Your wallets private key>
+```
+
+Deploy
+`forge create NFT --rpc-url=$RPC_URL --private-key=$PRIVATE_KEY --constructor-args <name> <symbol>`
+If successfully deployed, you will see the deploying wallet's address, the contract's address as well as the transaction hash printed to your terminal.
+
+ 
 
