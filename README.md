@@ -28,5 +28,24 @@ Deploy
 `forge create NFT --rpc-url=$RPC_URL --private-key=$PRIVATE_KEY --constructor-args <name> <symbol>`
 If successfully deployed, you will see the deploying wallet's address, the contract's address as well as the transaction hash printed to your terminal.
 
+Verify
+`forge flatten --output src/NFT.flattened.sol src/NFT.sol`
+
+`forge verify-contract --chain-id 4 --constructor-args 
+    $(cast abi-encode "constructor(string,string)" "myNFT" "fNFT")
+    --compiler-version v0.8.10+commit.fc410830 <the_contract_address> src/NFT.sol:NFT <your_etherscan_api_key>`
+
+Success !!
+
+#### Shell Autocompletion
+
+```
+mkdir -p $HOME/.local/share/bash-completion/completions
+forge completions bash > $HOME/.local/share/bash-completion/completions/forge
+cast completions bash > $HOME/.local/share/bash-completion/completions/cast
+exec bash
+```
+
+#### Minting NFTs from your contract
  
 
