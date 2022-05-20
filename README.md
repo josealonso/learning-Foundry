@@ -53,3 +53,18 @@ Calling functions on your NFT contract is made simple with Cast, Foundry's comma
 cast send --rpc-url=$RPC_URL <contractAddress>  "mintTo(address)" <arg> --private-key=$PRIVATE_KEY
 ```
 
+This `cast call` command returns the address provided above
+```
+cast call --rpc-url=$RPC_URL --private-key=$PRIVATE_KEY <contractAddress> "ownerOf(uint256)" 1
+```
+It returns the same address if the argument is 2, since I minted 2 NFTs.
+
+#### Extending our NFT contract functionality
+
+- Add metadata for the content.
+- Set a minting price.
+- Set a maximum supply.
+- Add a withdraw function.
+
+Let's call it `improvedNFT.sol`
+
