@@ -48,4 +48,8 @@ exec bash
 
 #### Minting NFTs from your contract
  
+Calling functions on your NFT contract is made simple with Cast, Foundry's command-line tool for interacting with smart contracts, sending transactions, and getting chain data.
+```
+cast send --rpc-url=$RPC_URL <contractAddress>  "mintTo(address)" <arg> --private-key=$PRIVATE_KEY
+```
 
