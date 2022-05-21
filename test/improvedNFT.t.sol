@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "ds-test/test.sol";
-import "forge-std/Test.sol";
-import "forge-std/Vm.sol";
+// import "../lib/ds-test/src/test.sol";
+// import "../lib/forge-std/src/std-lib.sol";
+import "../lib/forge-std/src/Test.sol";
 import "../src/improvedNFT.sol";
+import "./interfaces/HEVM.sol";
 
-contract improvedNFTTest is Test {
+contract improvedNFTTest is
+    Test // DSTest
+{
     using stdStorage for StdStorage;
-
-    Vm private vm = Vm(HEVM_ADDRESS);
+    // It's declared in Test.sol like that
+    // Vm public constant vm = Vm(HEVM_ADDRESS);
+    // Hevm private vm = Hevm(HEVM_ADDRESS);
     improvedNFT private improvednft;
-    StdStorage private stdstore;
+
+    // StdStorage private stdstore; // It's declared in Test.sol
 
     function setUp() public {
         // Deploy contract
@@ -49,13 +54,15 @@ contract improvedNFTTest is Test {
             .sig(improvednft.ownerOf.selector)
             .with_key(1)
             .find();
-        // bytes32 locOfNewOwner = bytes32(slotOfNewOwner);
         uint160 ownerOfTokenIdOne = uint160(
-            uint256(vm.load(address(improvednft), bytes32(abi.encode(arg))))
+            uint256(
+                vm.load(
+                    address(improvednft),
+                    bytes32(abi.encode(slotOfNewOwner))
+                )
+            )
         );
-        // );
-        // bytes32 mockedNewOwner = bytes32(abi.encode(10_000));
-        assertEq(address(ownerOfTokenIdOne, address(1)));
+        assertEq(address(ownerOfTokenIdOne), address(1));
     }
 
     function testBalanceIncremented() public {
@@ -75,10 +82,63 @@ contract improvedNFTTest is Test {
             vm.load(address(improvednft), bytes32(slotBalance))
         );
         assertEq(balanceSecondMint, 2);
-
     }
 
-    function testExample() public {
-        assertTrue(true);
+    function testSafeContractReceiver() public {
+        Receiver receiver = new Receiver();
+        improvednft.mintTo{value: 0.08 ether}(address(receiver));
+        uint256 slotBalance = stdstore
+            .target(address(improvednft))
+            .sig(improvednft.balanceOf.selector)
+            .with_key(address(receiver))
+            .find();
+
+        uint256 balance = uint256(
+            vm.load(address(improvednft), bytes32(slotBalance))
+        );
+        assertEq(balance, 1);
+    }
+
+    function testFailUnSafeContractReceiver() public {
+        vm.etch(address(1), bytes("mock code"));
+        improvednft.mintTo{value: 0.08 ether}(address(1));
+    }
+
+    function testWithdrawalWorksAsOwner() public {
+        // Mint an NFT, sending eth to the contract
+        Receiver receiver = new Receiver();
+        address payable payee = payable(address(0x1337));
+        uint256 priorPayeeBalance = payee.balance;
+        improvednft.mintTo{value: improvednft.MINT_PRICE()}(address(receiver));
+        // Check that the balance of the contract is correct
+        assertEq(address(improvednft).balance, improvednft.MINT_PRICE());
+        uint256 nftBalance = address(improvednft).balance;
+        // Withdraw the balance and assert it was transferred
+        improvednft.withdrawPayments(payee);
+        assertEq(payee.balance, priorPayeeBalance + nftBalance);
+    }
+
+    function testWithdrawalFailsAsNotOwner() public {
+        // Mint an NFT, sending eth to the contract
+        Receiver receiver = new Receiver();
+        improvednft.mintTo{value: improvednft.MINT_PRICE()}(address(receiver));
+        // Check that the balance of the contract is correct
+        assertEq(address(improvednft).balance, improvednft.MINT_PRICE());
+        // Confirm that a non-owner cannot withdraw
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.startPrank(address(0xd3ad));
+        improvednft.withdrawPayments(payable(address(0xd3ad)));
+        vm.stopPrank();
+    }
+}
+
+contract Receiver is ERC721TokenReceiver {
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 id,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }

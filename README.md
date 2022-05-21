@@ -68,3 +68,14 @@ It returns the same address if the argument is 2, since I minted 2 NFTs.
 
 Let's call it `improvedNFT.sol`
 
+#### Running the tests
+
+- `forge test`
+
+- To print the gas report
+
+`forge test --gas-report`
+
+#### Conclusion
+
+There is no better way to deeply understand solidity than writing your tests in solidity.
